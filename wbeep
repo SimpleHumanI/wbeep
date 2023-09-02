@@ -7,6 +7,7 @@ LIST_CMD="${PWD}/list_ssid"
 SCAN_CMD="${PWD}/scan_ssid"
 BEEP_CMD="${PWD}/say_beep"
 beep="${PWD}/beep.mp3"
+FFM_CMD="ffmpeg -i $beep -f alsa "plughw:CARD=Intel,DEV=0""
 
 wbeep_die()
 {
@@ -19,8 +20,36 @@ wbeep_sig()
 	printf "\nquit!\n"
 	exit 0
 }
-trap wbeep_sig SIGINT SIGTERM SIGQUIT
+wbeep_good_signal()
+{
+	pow=$1
+	path=$2
 
+	if [[ $pow > 210 ]];then
+		echo "signal power 4/4"
+		for i in {1..4}; do
+			printf "."
+			$FFM_CMD &>/dev/null
+			sleep 0.1
+		done
+	elif [[ $pow < 210 ]] && [[ $pow > 190 ]];then
+		echo "signal power 3/4"
+		for i in {1..3}; do 
+			printf "."
+			$FFM_CMD &>/dev/null
+			sleep 0.3
+		done
+	elif [[ $pow < 190 ]] && [[ $pow > 150 ]];then
+		echo "signal power 2/4"
+		for i in {1..2}; do 
+			printf "."
+			$FFM_CMD &>/dev/null
+			sleep 0.5
+		done
+	fi
+}
+
+trap wbeep_sig SIGINT SIGTERM SIGQUIT
 
 if [[ ! $UID = 0 ]]; then
 	wbeep_die "run script as root : Permission denied"
@@ -53,9 +82,10 @@ while true; do
 	if [[ $sig < 150 ]] ;then
 		printf "\nsignal pwer 1/4\n"
 		printf "."
-		ffmpeg -i $beep -f alsa default &>/dev/null
+		$FFM_CMD &>/dev/null
 		echo
 	else
-		$BEEP_CMD $sig $(dirname $SCAN_CMD) 
+		wbeep_good_signal $sig ${PWD}
+		echo
 	fi
 done
