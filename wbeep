@@ -1,0 +1,61 @@
+#!/bin/bash
+
+PRG_NAME="wbeep"
+IFACE=$1
+SSID=$2
+LIST_CMD="${PWD}/list_ssid"
+SCAN_CMD="${PWD}/scan_ssid"
+BEEP_CMD="${PWD}/say_beep"
+beep="${PWD}/beep.mp3"
+
+wbeep_die()
+{
+	text=$1
+	printf "$PRG_NAME: $text \n"
+	exit 1
+}
+wbeep_sig()
+{
+	printf "\nquit!\n"
+	exit 0
+}
+trap wbeep_sig SIGINT SIGTERM SIGQUIT
+
+
+if [[ ! $UID = 0 ]]; then
+	wbeep_die "run script as root : Permission denied"
+fi
+
+if [[ ! $1 ]] || [[ $1 = "--help" ]] || [[ ! $2 ]] ;then
+	printf "
+Usage: $PRG_NAME [INTERFACE] [SSID]
+	example: sudo $PROG_NAME wlan0 tplink-123
+or
+Usage: $PRG_NAME [INTERFACE] [OPTION]
+	example: sudo $PRG_NAME wlan0 -l
+
+OPTIONS
+	-l, --list : to show list ssids
+"
+	exit 1
+fi
+
+if [[ $2 = "--list" ]] || [[ $2 = "-l" ]] ;then
+	$LIST_CMD $IFACE
+	exit 0
+fi
+
+while true; do
+	printf "packet sent ..."
+	cmd=$($SCAN_CMD $IFACE $SSID)
+	
+	sig=$(echo $cmd | awk '{ print $5 }')
+	if [[ $sig < 150 ]] ;then
+		printf "\nsignal pwer 1/4\n"
+		printf "."
+		ffmpeg -i $beep -f alsa default &>/dev/null
+		echo
+	else
+		$BEEP_CMD $sig $(dirname $SCAN_CMD) 
+	fi
+done
