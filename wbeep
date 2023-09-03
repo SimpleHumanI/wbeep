@@ -1,5 +1,6 @@
 #!/bin/bash
 
+FFM_CMD='ffmpeg -i $beep -f alsa "plughw:CARD=Intel,DEV=0"'
 PRG_NAME="wbeep"
 IFACE=$1
 SSID=$2
@@ -7,7 +8,6 @@ LIST_CMD="${PWD}/list_ssid"
 SCAN_CMD="${PWD}/scan_ssid"
 BEEP_CMD="${PWD}/say_beep"
 beep="${PWD}/beep.mp3"
-FFM_CMD='ffmpeg -i $beep -f alsa "plughw:CARD=Intel,DEV=0"'
 
 wbeep_die()
 {
