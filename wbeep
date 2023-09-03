@@ -48,15 +48,9 @@ wbeep_good_signal()
 		done
 	fi
 }
-
-trap wbeep_sig SIGINT SIGTERM SIGQUIT
-
-if [[ ! $UID = 0 ]]; then
-	wbeep_die "run script as root : Permission denied"
-fi
-
-if [[ ! $1 ]] || [[ $1 = "--help" ]] || [[ ! $2 ]] ;then
-	printf "
+wbeep_usage()
+{
+		printf "
 Usage: $PRG_NAME [INTERFACE] [SSID]
 	example: sudo $PROG_NAME wlan0 tplink-123
 or
@@ -67,12 +61,22 @@ OPTIONS
 	-l, --list : to show list ssids
 "
 	exit 1
-fi
 
-if [[ $2 = "--list" ]] || [[ $2 = "-l" ]] ;then
-	$LIST_CMD $IFACE
-	exit 0
-fi
+}
+trap wbeep_sig SIGINT SIGTERM SIGQUIT
+
+
+main()
+{
+
+case $2 in
+	-l | --list)
+		$LIST_CMD $IFACE
+		;;
+	*)
+		wbeep_usage
+		;;
+esac
 
 while true; do
 	printf "packet sent ..."
@@ -88,4 +92,17 @@ while true; do
 		wbeep_good_signal $sig ${PWD}
 		echo
 	fi
-done
+done	
+}
+
+if [[ $1 = "--help" ]] || [[ ! $1 ]] ;then
+	wbeep_usage 
+fi
+
+if [[ ! $UID = 0 ]]; then
+	wbeep_die "run script as root : Permission denied"
+else
+	main $@
+fi
+
+
