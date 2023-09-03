@@ -17,6 +17,6 @@ scan_ssid:
 	gcc -liw scan_ssid.c -o scan_ssid
 
 all: check_iw check_ffmpeg list_ssid scan_ssid
-
+	chmod +x list_ssid scan_ssid
 clean:
 	rm scan_ssid list_ssid
